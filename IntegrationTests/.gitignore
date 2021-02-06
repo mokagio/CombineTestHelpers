@@ -1,0 +1,4 @@
+# Ignore Xcode project and workspace because Tuist generates them
+*.xcodeproj
+*.xcworkspace
+DerivedData/
