@@ -1,12 +1,27 @@
-import XCTest
+import Combine
 @testable import CombineTestHelpers
+import XCTest
 
 final class CombineTestHelpersTests: XCTestCase {
+
+    var cancellables = Set<AnyCancellable>()
+
     func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(CombineTestHelpers().text, "Hello, World!")
+        let e = XCTestExpectation(description: "")
+
+        doesThisCompile()
+        .sink(
+            receiveCompletion: { c in
+                guard case .finished = c else { return }
+                e.fulfill()
+            },
+            receiveValue: {
+                XCTAssertEqual($0, 42)
+            }
+            )
+        .store(in: &cancellables)
+
+        wait(for: [e], timeout: 0.1)
     }
 
     static var allTests = [
