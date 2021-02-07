@@ -38,23 +38,7 @@ final class CombineTestHelpersTests: XCTestCase {
             subject.send(completion: .finished)
         }
 
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Publishes only once with value 1")
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    guard case .finished = completion else { return }
-                    expectation.fulfill()
-                },
-                receiveValue: {
-                    XCTAssertEqual($0, 1)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
+        assert(subject.eraseToAnyPublisher(), eventuallyPublishesOnly: 1)
     }
 
     func testPublishesOnlyOneValueThenFails() throws {
@@ -171,8 +155,6 @@ final class CombineTestHelpersTests: XCTestCase {
         wait(for: [expectation], timeout: 0.5)
     }
 
-
-    // Similar to the previous one, but now we're interested in the published values, too.
     func testPublishesSomeValuesThenFails() throws {
         let subject = PassthroughSubject<Int, TestError>()
         asyncAfter(0.1) {
@@ -182,27 +164,12 @@ final class CombineTestHelpersTests: XCTestCase {
             subject.send(completion: .failure(.errorCase2))
         }
 
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Publishes values then a failure")
-
-        var values: [Int] = []
-
-        publisher.sink(
-            receiveCompletion: { completion in
-                guard case .failure(let error) = completion else { return }
-                XCTAssertEqual(.errorCase2, error)
-                expectation.fulfill()
-            },
-            receiveValue: {
-                values.append($0)
-            }
+        assert(
+            subject.eraseToAnyPublisher(),
+            eventuallyPublishes: [
+                .success(1), .success(2), .success(3), .failure(.errorCase2)
+            ]
         )
-        .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-
-        XCTAssertEqual([1,2,3], values)
     }
 
     // The difference here is that we use an array of `Result` to collect all the values and then
