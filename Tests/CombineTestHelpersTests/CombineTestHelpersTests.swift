@@ -166,9 +166,8 @@ final class CombineTestHelpersTests: XCTestCase {
 
         assert(
             subject.eraseToAnyPublisher(),
-            eventuallyPublishes: [
-                .success(1), .success(2), .success(3), .failure(.errorCase2)
-            ]
+            eventuallyPublishes: [1, 2, 3],
+            then: .failure(.errorCase2)
         )
     }
 
