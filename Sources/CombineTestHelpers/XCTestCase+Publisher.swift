@@ -24,6 +24,45 @@ public extension XCTestCase {
 
     func assert<Output, Failure>(
         _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyFinishesPublishingOnly value: Output,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes exactly one expected value then finishes",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: [value],
+            then: .finished,
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishesOnly value: Output,
+        thenFailsWith error: Failure,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes exactly one expected value then fails",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: [value],
+            then: .failure(error),
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishes values: [Output],
         then completion: Subscribers.Completion<Failure>?,
         timeout: Double = 1.0,

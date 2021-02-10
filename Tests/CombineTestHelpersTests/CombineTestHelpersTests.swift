@@ -6,6 +6,89 @@ final class CombineTestHelpersTests: XCTestCase {
 
     private var cancellables = Set<AnyCancellable>()
 
+    /*
+     Possible scenarios:
+
+     values \ completion    | failure   | finished  | unknown
+     ---------------------------------------------------------
+     no value               | 1         | 2         | 3
+     at least one value     | 4         | 5         | 6
+     exactly one value      | 7         | 8         | 9
+     many values            | 10        | 11        | 12
+     unknown                | 13        | 14        | n.a.
+
+     */
+
+    /// 1 - values: none & completion: failure
+
+    /// 2 - values: none & completion: finished
+
+    /// 3 - values: none & completion: unknown
+
+    /// 4 - values: at least one & completion: failure
+
+    /// 5 - values: at least one & completion: finished
+
+    /// 6 - values: at least one & completion: unknown
+
+    /// 7 - values: exactly one & completion: failure
+    func test7() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishesOnly: 1)
+    }
+
+    func test7plus() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishesOnly: 1, thenFailsWith: .errorCase1)
+    }
+
+    /// 8 - values: exactly one & completion: finished
+    func test8() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyPublishesOnly: 1)
+    }
+
+    func test8plus() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyFinishesPublishingOnly: 1)
+    }
+
+    /// 9 - values: exactly one & completion: unknown
+
+    /// 10 - values: many & completion: failure
+
+    /// 11 - values: many & completion: finished
+
+    /// 12 - values: many & completion: unknown
+
+    /// 13 - values: unknown & completion: failure
+
+    /// 14 - values: unknown & completion: finished
+
+    private func makePublisher(
+        _ subjectBehavior: @escaping (PassthroughSubject<Int, TestError>) -> Void
+    ) -> AnyPublisher<Int, TestError> {
+        let subject = PassthroughSubject<Int, TestError>()
+        asyncAfter(0.1) { subjectBehavior(subject) }
+        return subject.eraseToAnyPublisher()
+    }
+
     func testFirstPublishedValue() throws {
         let subject = PassthroughSubject<Int, TestError>()
         asyncAfter(0.1) {
