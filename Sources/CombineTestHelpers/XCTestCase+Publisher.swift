@@ -187,6 +187,45 @@ public extension XCTestCase {
     func assert<Output, Failure>(
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishes values: [Output],
+        thenFailsWith error: Failure,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: values,
+            then: .failure(error),
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyFinishesAfterPublishing values: [Output],
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values then finishes",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: values,
+            then: .finished,
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishes values: [Output],
         then completion: Subscribers.Completion<Failure>?,
         timeout: Double = 1.0,
         description: String = "Publisher publishes expected values",
@@ -201,6 +240,66 @@ public extension XCTestCase {
             thenCompletesSatisfying: { publishedCompletion, file, line in
                 guard let completion = completion else { return }
                 XCTAssertEqual(publishedCompletion, completion, file: file, line: line)
+            },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishes values: [Output],
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: values,
+            then: .none,
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyFailsWith error: Failure,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { _, _, _ in },
+            thenCompletesSatisfying: { publishedCompletion, file, line in
+                XCTAssertEqual(publishedCompletion, .failure(error), file: file, line: line)
+            },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        publisherEventuallyFinishes publisher: AnyPublisher<Output, Failure>,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { _, _, _ in },
+            thenCompletesSatisfying: { publishedCompletion, file, line in
+                XCTAssertEqual(publishedCompletion, .finished)
             },
             timeout: timeout,
             description: description,

@@ -108,7 +108,7 @@ final class CombineTestHelpersTests: XCTestCase {
     }
 
     /// 8 - values: exactly one & completion: finished
-    func test8plus() {
+    func test8() {
         let publisher = makePublisher {
             $0.send(1)
             $0.send(completion: .finished)
@@ -137,14 +137,103 @@ final class CombineTestHelpersTests: XCTestCase {
     }
 
     /// 10 - values: many & completion: failure
+    func test10a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishes: [1, 2], thenFailsWith: .errorCase1)
+    }
+
+    func test10b() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishes: [1, 2], then: .failure(.errorCase1))
+    }
 
     /// 11 - values: many & completion: finished
+    func test11a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyFinishesAfterPublishing: [1, 2])
+    }
+
+    func test11b() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyPublishes: [1, 2], then: .finished)
+    }
 
     /// 12 - values: many & completion: unknown
+    func test12a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishes: [1, 2])
+    }
+
+    func test12b() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyPublishes: [1, 2])
+    }
 
     /// 13 - values: unknown & completion: failure
+    func test13a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyFailsWith: .errorCase1)
+    }
+
+    func test13b() {
+        let publisher = makePublisher {
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyFailsWith: .errorCase1)
+    }
 
     /// 14 - values: unknown & completion: finished
+    func test14a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisherEventuallyFinishes: publisher)
+    }
+
+    func test14b() {
+        let publisher = makePublisher {
+            $0.send(completion: .finished)
+        }
+
+        assert(publisherEventuallyFinishes: publisher)
+    }
 
     private func makePublisher(
         _ subjectBehavior: @escaping (PassthroughSubject<Int, TestError>) -> Void
@@ -154,220 +243,30 @@ final class CombineTestHelpersTests: XCTestCase {
         return subject.eraseToAnyPublisher()
     }
 
-    func testFirstPublishedValue() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(2)
-            subject.send(completion: .finished)
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "First published value is 1")
-
-        publisher
-            .sink(
-                receiveCompletion: { _ in },
-                receiveValue: {
-                    XCTAssertEqual($0, 1)
-                    expectation.fulfill()
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPublishesOnlyOneValue() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(completion: .finished)
-        }
-
-        assert(subject.eraseToAnyPublisher(), eventuallyPublishesOnly: 1)
-    }
-
-    func testPublishesOnlyOneValueThenFails() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(completion: .failure(.errorCase1))
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(
-            description: "Publishes only once with value 1 then fails"
-        )
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    guard case .failure(let error) = completion else { return }
-                    XCTAssertEqual(error, .errorCase1)
-                    expectation.fulfill()
-                },
-                receiveValue: {
-                    XCTAssertEqual($0, 1)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPublishesManyValues() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(2)
-            subject.send(3)
-            subject.send(completion: .finished)
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Publishes many values")
-
-        var values: [Int] = []
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    guard case .finished = completion else { return }
-                    expectation.fulfill()
-                },
-                receiveValue: {
-                    values.append($0)
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-
-        XCTAssertEqual([1,2,3], values)
-    }
-
-    func testEventuallyPublishesAFailure() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(2)
-            subject.send(3)
-            subject.send(completion: .failure(.errorCase1))
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Eventually publishes a failure")
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    guard case .failure(let error) = completion else { return }
-                    XCTAssertEqual(.errorCase1, error)
-                    expectation.fulfill()
-                },
-                receiveValue: { _ in }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPublishesOnlyFailure() {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(completion: .failure(.errorCase1))
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Fails without publishing values")
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    guard case .failure(let error) = completion else { return }
-                    XCTAssertEqual(error, .errorCase1)
-                    expectation.fulfill()
-                },
-                receiveValue: {
-                    XCTFail("Expected to fail without receiving any value, got \($0)")
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-    }
-
-    func testPublishesSomeValuesThenFails() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(2)
-            subject.send(3)
-            subject.send(completion: .failure(.errorCase2))
-        }
-
-        assert(
-            subject.eraseToAnyPublisher(),
-            eventuallyPublishes: [1, 2, 3],
-            then: .failure(.errorCase2)
-        )
-    }
-
-    // The difference here is that we use an array of `Result` to collect all the values and then
-    // run an equality assertion on that. It only works if both `Output` and `Failure` conform to
-    // `Equatable`
-    func testPublishesSomeValuesThenFails_Alternative() throws {
-        let subject = PassthroughSubject<Int, TestError>()
-        asyncAfter(0.1) {
-            subject.send(1)
-            subject.send(2)
-            subject.send(3)
-            subject.send(completion: .failure(.errorCase2))
-        }
-
-        let publisher = subject.eraseToAnyPublisher()
-
-        let expectation = XCTestExpectation(description: "Publishes values then a failure")
-
-        var values: [Result<Int, TestError>] = []
-
-        publisher
-            .sink(
-                receiveCompletion: { completion in
-                    switch completion {
-                    case .failure(let error): values.append(.failure(error))
-                    case .finished: break
-                    }
-                    expectation.fulfill()
-                },
-                receiveValue: {
-                    values.append(.success($0))
-                }
-            )
-            .store(in: &cancellables)
-
-        wait(for: [expectation], timeout: 0.5)
-
-        let expectedValues: [Result<Int, TestError>] = [
-            .success(1), .success(2), .success(3), .failure(.errorCase2)
-        ]
-        XCTAssertEqual(expectedValues, values)
-    }
-
     // TODO: Is there a way to generate this at runtime to include all the methods starting with
     // tests instead of manually update it?
     static var allTests = [
-        ("testFirstPublishedValue", testFirstPublishedValue),
-        ("testPublishesOnlyOneValue", testPublishesOnlyOneValue),
-        ("testPublishesManyValues", testPublishesManyValues),
-        ("testEventuallyPublishesAFailure", testEventuallyPublishesAFailure),
-        ("testPublishesOnlyFailure", testPublishesOnlyFailure),
-        ("testPublishesSomeValuesThenFails", testPublishesSomeValuesThenFails),
+        ("test1", test1),
+        ("test2", test2),
+        ("test3a", test3a),
+        ("test3b", test3b),
+        ("test4", test4),
+        ("test5", test5),
+        ("test6a", test6a),
+        ("test6b", test6b),
+        ("test7", test7),
+        ("test8", test8),
+        ("test9a", test9a),
+        ("test9b", test9b),
+        ("test10a", test10a),
+        ("test10b", test10b),
+        ("test11a", test11a),
+        ("test11b", test11b),
+        ("test12a", test12a),
+        ("test12b", test12b),
+        ("test13a", test13a),
+        ("test13b", test13b),
+        ("test14a", test14a),
+        ("test14b", test14b),
     ]
 }
