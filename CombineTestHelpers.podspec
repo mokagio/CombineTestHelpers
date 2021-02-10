@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'CombineTestHelpers'
-  s.version = '0.0.1'
+  s.version = '0.1.0'
   s.summary = 'Test assertions for Combine types'
   s.homepage = 'https://github.com/mokagio/CombineTestHelpers'
   s.license = { :type => 'MIT', :file => 'LICENSE' }
