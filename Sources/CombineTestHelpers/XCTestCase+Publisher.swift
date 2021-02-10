@@ -142,9 +142,11 @@ public extension XCTestCase {
 
         wait(for: [expectation], timeout: timeout)
 
-        XCTAssertEqual(publication.values, values)
+        // TODO: Eventually, I'd like to have a custom and customizable message for both these
+        // assertions.
+        XCTAssertEqual(publication.values, values, file: file, line: line)
         if let completion = completion {
-            XCTAssertEqual(publication.completion, completion)
+            XCTAssertEqual(publication.completion, completion, file: file, line: line)
         }
     }
 }
