@@ -50,7 +50,7 @@ public extension XCTestCase {
         assert(
             publisher,
             eventuallyPublishes: [],
-            then: .none,
+            then: .finished,
             timeout: timeout,
             description: description,
             file: file,
@@ -62,7 +62,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishesOnly value: Output,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes exactly one expected value",
+        description: String = "Publisher publishes exactly one value",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -81,7 +81,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyFinishesPublishingOnly value: Output,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes exactly one expected value then finishes",
+        description: String = "Publisher publishes exactly one value then finishes",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -101,7 +101,7 @@ public extension XCTestCase {
         eventuallyPublishesOnly value: Output,
         thenFailsWith error: Failure,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes exactly one expected value then fails",
+        description: String = "Publisher publishes exactly one value then fails",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -121,7 +121,7 @@ public extension XCTestCase {
         eventuallyPublishesAtLeast value: Output,
         thenFailsWith error: Failure,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes at least one expected value then fails",
+        description: String = "Publisher publishes at least one value then fails",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -144,7 +144,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyFinishesPublishingAtLeast value: Output,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes at least one expected value then fails",
+        description: String = "Publisher publishes at least one value then finishes",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -167,7 +167,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishesAtLeast value: Output,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes at least one expected value then fails",
+        description: String = "Publisher publishes at least one value",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -189,7 +189,7 @@ public extension XCTestCase {
         eventuallyPublishes values: [Output],
         thenFailsWith error: Failure,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher publishes values then fails",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -208,7 +208,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyFinishesAfterPublishing values: [Output],
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values then finishes",
+        description: String = "Publisher publishes values then finishes",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -228,7 +228,7 @@ public extension XCTestCase {
         eventuallyPublishes values: [Output],
         then completion: Subscribers.Completion<Failure>?,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher publishes values then completes",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -252,7 +252,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishes values: [Output],
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher publishes values",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -271,7 +271,7 @@ public extension XCTestCase {
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyFailsWith error: Failure,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher completes with failure",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -291,7 +291,7 @@ public extension XCTestCase {
     func assert<Output, Failure>(
         publisherEventuallyFinishes publisher: AnyPublisher<Output, Failure>,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher completes successfully",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
@@ -313,7 +313,7 @@ public extension XCTestCase {
         eventuallyPublishesValuesSatisfying valueAssertions: @escaping ([Output], StaticString, UInt) -> Void,
         thenCompletesSatisfying completionAssertions: @escaping (Subscribers.Completion<Failure>?, StaticString, UInt) -> Void,
         timeout: Double = 1.0,
-        description: String = "Publisher publishes expected values",
+        description: String = "Publisher publishes values and completion satisfying given criteria",
         file: StaticString = #file,
         line: UInt = #line
     ) where Output: Equatable, Failure: Equatable & Error {
