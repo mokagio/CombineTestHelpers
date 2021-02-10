@@ -20,10 +20,31 @@ final class CombineTestHelpersTests: XCTestCase {
      */
 
     /// 1 - values: none & completion: failure
+    func test1() {
+        let publisher = makePublisher {
+            $0.send(completion: .finished)
+        }
+
+        assert(publisherPublishesNoValue: publisher)
+    }
 
     /// 2 - values: none & completion: finished
+    func test2() {
+        let publisher = makePublisher {
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, publishesNoValueThenFailsWith: .errorCase1)
+    }
 
     /// 3 - values: none & completion: unknown
+    func test3() {
+        let publisher = makePublisher {
+            $0.send(completion: .finished)
+        }
+
+        assert(publisherPublishesNoValueThenFinishes: publisher)
+    }
 
     /// 4 - values: at least one & completion: failure
 

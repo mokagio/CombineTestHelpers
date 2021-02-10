@@ -4,6 +4,61 @@ import XCTest
 public extension XCTestCase {
 
     func assert<Output, Failure>(
+        publisherPublishesNoValue publisher: AnyPublisher<Output, Failure>,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes no value",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: [],
+            then: .none,
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        publishesNoValueThenFailsWith error: Failure,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes no value then fails",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: [],
+            then: .failure(error),
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        publisherPublishesNoValueThenFinishes publisher: AnyPublisher<Output, Failure>,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes no value then finishes",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishes: [],
+            then: .none,
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
         _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishesOnly value: Output,
         timeout: Double = 1.0,
