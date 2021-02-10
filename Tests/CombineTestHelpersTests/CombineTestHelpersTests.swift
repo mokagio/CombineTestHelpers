@@ -22,23 +22,14 @@ final class CombineTestHelpersTests: XCTestCase {
     /// 1 - values: none & completion: failure
     func test1() {
         let publisher = makePublisher {
-            $0.send(completion: .finished)
-        }
-
-        assert(publisherPublishesNoValue: publisher)
-    }
-
-    /// 2 - values: none & completion: finished
-    func test2() {
-        let publisher = makePublisher {
             $0.send(completion: .failure(.errorCase1))
         }
 
         assert(publisher, publishesNoValueThenFailsWith: .errorCase1)
     }
 
-    /// 3 - values: none & completion: unknown
-    func test3() {
+    /// 2 - values: none & completion: finished
+    func test2() {
         let publisher = makePublisher {
             $0.send(completion: .finished)
         }
@@ -46,23 +37,68 @@ final class CombineTestHelpersTests: XCTestCase {
         assert(publisherPublishesNoValueThenFinishes: publisher)
     }
 
-    /// 4 - values: at least one & completion: failure
-
-    /// 5 - values: at least one & completion: finished
-
-    /// 6 - values: at least one & completion: unknown
-
-    /// 7 - values: exactly one & completion: failure
-    func test7() {
+    /// 3 - values: none & completion: unknown
+    func test3a() {
         let publisher = makePublisher {
-            $0.send(1)
             $0.send(completion: .failure(.errorCase1))
         }
 
-        assert(publisher, eventuallyPublishesOnly: 1)
+        assert(publisherPublishesNoValue: publisher)
     }
 
-    func test7plus() {
+    func test3b() {
+        let publisher = makePublisher {
+            $0.send(completion: .finished)
+        }
+
+        assert(publisherPublishesNoValue: publisher)
+    }
+
+    /// 4 - values: at least one & completion: failure
+    func test4() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishesAtLeast: 1, thenFailsWith: .errorCase1)
+    }
+
+    /// 5 - values: at least one & completion: finished
+    func test5() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyFinishesPublishingAtLeast: 1)
+    }
+
+    /// 6 - values: at least one & completion: unknown
+    func test6a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishesAtLeast: 1)
+    }
+
+    func test6b() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(2)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyPublishesAtLeast: 1)
+    }
+
+    /// 7 - values: exactly one & completion: failure
+    func test7() {
         let publisher = makePublisher {
             $0.send(1)
             $0.send(completion: .failure(.errorCase1))
@@ -72,15 +108,6 @@ final class CombineTestHelpersTests: XCTestCase {
     }
 
     /// 8 - values: exactly one & completion: finished
-    func test8() {
-        let publisher = makePublisher {
-            $0.send(1)
-            $0.send(completion: .finished)
-        }
-
-        assert(publisher, eventuallyPublishesOnly: 1)
-    }
-
     func test8plus() {
         let publisher = makePublisher {
             $0.send(1)
@@ -91,6 +118,23 @@ final class CombineTestHelpersTests: XCTestCase {
     }
 
     /// 9 - values: exactly one & completion: unknown
+    func test9a() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .failure(.errorCase1))
+        }
+
+        assert(publisher, eventuallyPublishesOnly: 1)
+    }
+
+    func test9b() {
+        let publisher = makePublisher {
+            $0.send(1)
+            $0.send(completion: .finished)
+        }
+
+        assert(publisher, eventuallyPublishesOnly: 1)
+    }
 
     /// 10 - values: many & completion: failure
 

@@ -118,8 +118,101 @@ public extension XCTestCase {
 
     func assert<Output, Failure>(
         _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishesAtLeast value: Output,
+        thenFailsWith error: Failure,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes at least one expected value then fails",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { publishedValues, file, line in
+                XCTAssertEqual(publishedValues.first, value, file: file, line: line)
+            },
+            thenCompletesSatisfying: { publishedCompletion, file, line in
+                XCTAssertEqual(publishedCompletion, .failure(error), file: file, line: line)
+            },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyFinishesPublishingAtLeast value: Output,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes at least one expected value then fails",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { publishedValues, file, line in
+                XCTAssertEqual(publishedValues.first, value, file: file, line: line)
+            },
+            thenCompletesSatisfying: { publishedCompletion, file, line in
+                XCTAssertEqual(publishedCompletion, .finished, file: file, line: line)
+            },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishesAtLeast value: Output,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes at least one expected value then fails",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { publishedValues, file, line in
+                XCTAssertEqual(publishedValues.first, value, file: file, line: line)
+            },
+            thenCompletesSatisfying: { _, _, _ in },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
         eventuallyPublishes values: [Output],
         then completion: Subscribers.Completion<Failure>?,
+        timeout: Double = 1.0,
+        description: String = "Publisher publishes expected values",
+        file: StaticString = #file,
+        line: UInt = #line
+    ) where Output: Equatable, Failure: Equatable & Error {
+        assert(
+            publisher,
+            eventuallyPublishesValuesSatisfying: { publishedValues, file, line in
+                XCTAssertEqual(publishedValues, values, file: file, line: line)
+            },
+            thenCompletesSatisfying: { publishedCompletion, file, line in
+                guard let completion = completion else { return }
+                XCTAssertEqual(publishedCompletion, completion, file: file, line: line)
+            },
+            timeout: timeout,
+            description: description,
+            file: file,
+            line: line
+        )
+    }
+
+    private func assert<Output, Failure>(
+        _ publisher: AnyPublisher<Output, Failure>,
+        eventuallyPublishesValuesSatisfying valueAssertions: @escaping ([Output], StaticString, UInt) -> Void,
+        thenCompletesSatisfying completionAssertions: @escaping (Subscribers.Completion<Failure>?, StaticString, UInt) -> Void,
         timeout: Double = 1.0,
         description: String = "Publisher publishes expected values",
         file: StaticString = #file,
@@ -142,12 +235,8 @@ public extension XCTestCase {
 
         wait(for: [expectation], timeout: timeout)
 
-        // TODO: Eventually, I'd like to have a custom and customizable message for both these
-        // assertions.
-        XCTAssertEqual(publication.values, values, file: file, line: line)
-        if let completion = completion {
-            XCTAssertEqual(publication.completion, completion, file: file, line: line)
-        }
+        valueAssertions(publication.values, file, line)
+        completionAssertions(publication.completion, file, line)
     }
 }
 
